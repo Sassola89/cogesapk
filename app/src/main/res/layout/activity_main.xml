@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#121212">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🗝️ Mikai Android"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:gravity="center"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp" />
+
+        <!-- Stato lettore -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:cardBackgroundColor="#1E1E1E"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="🔌 Nessun lettore ACR122U collegato"
+                android:textSize="14sp"
+                android:textColor="#AAAAAA"
+                android:gravity="center"
+                android:padding="16dp" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Credito attuale -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            app:cardBackgroundColor="#1E1E1E"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="CREDITO ATTUALE"
+                    android:textSize="11sp"
+                    android:textColor="#888888"
+                    android:letterSpacing="0.15"
+                    android:gravity="center" />
+
+                <TextView
+                    android:id="@+id/tvCredit"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="—"
+                    android:textSize="52sp"
+                    android:textStyle="bold"
+                    android:textColor="#4CAF50"
+                    android:gravity="center"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp" />
+
+                <TextView
+                    android:id="@+id/tvUid"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="11sp"
+                    android:textColor="#666666"
+                    android:gravity="center"
+                    android:fontFamily="monospace" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Pulsante lettura -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnRead"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:text="📖 Leggi MyKey"
+            android:textSize="16sp"
+            android:enabled="false"
+            app:backgroundTint="#6200EE" />
+
+        <!-- Sezione aggiunta credito -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="#1E1E1E"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="RICARICA"
+                    android:textSize="11sp"
+                    android:textColor="#888888"
+                    android:letterSpacing="0.15"
+                    android:paddingBottom="12dp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Importo (€)"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/etAmount"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="numberDecimal"
+                        android:textColor="#FFFFFF"
+                        android:maxLength="6" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <!-- Importi rapidi -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="12dp">
+
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chipGroup"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:singleLine="true">
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip050"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0,50€"
+                            style="@style/Widget.MaterialComponents.Chip.Action" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip100"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="1,00€"
+                            style="@style/Widget.MaterialComponents.Chip.Action" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip200"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="2,00€"
+                            style="@style/Widget.MaterialComponents.Chip.Action" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip500"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="5,00€"
+                            style="@style/Widget.MaterialComponents.Chip.Action" />
+
+                        <com.google.android.material.chip.Chip
+                            android:id="@+id/chip1000"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="10,00€"
+                            style="@style/Widget.MaterialComponents.Chip.Action" />
+
+                    </com.google.android.material.chip.ChipGroup>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="12dp">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnAdd"
+                        android:layout_width="0dp"
+                        android:layout_height="52dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:text="➕ Aggiungi"
+                        android:enabled="false"
+                        app:backgroundTint="#4CAF50" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSet"
+                        android:layout_width="0dp"
+                        android:layout_height="52dp"
+                        android:layout_weight="1"
+                        android:text="✏️ Imposta"
+                        android:enabled="false"
+                        app:backgroundTint="#FF9800" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Log operazioni -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardBackgroundColor="#1E1E1E"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="4dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="LOG"
+                    android:textSize="11sp"
+                    android:textColor="#888888"
+                    android:letterSpacing="0.15"
+                    android:paddingBottom="8dp" />
+
+                <TextView
+                    android:id="@+id/tvLog"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="80dp"
+                    android:text=""
+                    android:textSize="12sp"
+                    android:textColor="#AAAAAA"
+                    android:fontFamily="monospace"
+                    android:gravity="bottom" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <View android:layout_height="24dp" android:layout_width="match_parent" />
+
+    </LinearLayout>
+</ScrollView>

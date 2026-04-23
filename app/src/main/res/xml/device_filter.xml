@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    ACR122U USB device filter.
+    VID 0x072F = Advanced Card Systems
+    PID 0x2200 = ACR122U
+    PID 0x2214 = ACR122U (alternate firmware)
+-->
+<resources>
+    <usb-device vendor-id="1839" product-id="8704" />   <!-- 0x072F, 0x2200 -->
+    <usb-device vendor-id="1839" product-id="8724" />   <!-- 0x072F, 0x2214 -->
+</resources>

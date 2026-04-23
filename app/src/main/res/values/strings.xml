@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Mikai Android</string>
+    <string name="status_disconnected">🔌 Nessun lettore ACR122U collegato</string>
+    <string name="status_connected">✅ ACR122U collegato</string>
+    <string name="status_reading">⏳ Lettura in corso…</string>
+    <string name="status_writing">⏳ Scrittura in corso…</string>
+    <string name="status_error">❌ Errore</string>
+    <string name="credit_label">Credito attuale</string>
+    <string name="credit_placeholder">—</string>
+    <string name="btn_read">Leggi MyKey</string>
+    <string name="btn_add">Aggiungi credito</string>
+    <string name="btn_set">Imposta credito</string>
+    <string name="hint_euros">Importo (€)</string>
+    <string name="uid_label">UID carta</string>
+    <string name="log_title">Log operazioni</string>
+    <string name="permission_required">Permesso USB necessario per il lettore ACR122U</string>
+    <string name="tag_not_found">Nessuna MyKey rilevata. Avvicina la carta al lettore.</string>
+    <string name="invalid_amount">Importo non valido</string>
+    <string name="success_add">Credito aggiunto con successo!</string>
+    <string name="success_set">Credito impostato con successo!</string>
+</resources>

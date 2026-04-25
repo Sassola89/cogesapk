@@ -4,13 +4,12 @@
     <!-- USB Host permission for ACR122U via OTG -->
     <uses-feature android:name="android.hardware.usb.host" android:required="true" />
 
-    <application
-        android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.MikaiAndroid">
+<application
+    android:allowBackup="true"
+    android:icon="@android:drawable/sym_def_app_icon"
+    android:label="@string/app_name"
+    android:supportsRtl="true"
+    android:theme="@style/Theme.MikaiAndroid">
 
         <activity
             android:name=".MainActivity"

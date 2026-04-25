@@ -85,10 +85,10 @@ class Srix4kReader(private val pn532: Pn532) {
     private fun readUid(): Boolean {
         val response = pn532.inCommunicateThru(byteArrayOf(CMD_GET_UID)) ?: return false
 
-        if (response.size != UID_SIZE) {
-            Log.e(TAG, "UID lunghezza non valida: ${response.size}")
-            return false
-        }
+if (response.size < UID_SIZE) {
+    Log.e(TAG, "UID lunghezza errata: ${response.size} (attesi $UID_SIZE)")
+    return false
+}
 
         // Verifica codice produttore (byte 7 = 0xD0, byte 6 = 0x02 per ST SRIX4K)
         if (response[7] != ST_UID_BYTE7 || response[6] != ST_UID_BYTE6) {

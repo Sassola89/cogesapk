@@ -23,22 +23,22 @@ import com.mikai.android.usb.Acr122uDevice
 class Pn532(private val device: Acr122uDevice) {
 
     companion object {
-        private const val TAG = "Pn532"
+        private val TAG = "Pn532"
 
         // TFI (Transport Frame Identifier)
-        const val TFI_HOST_TO_PN532: Byte = 0xD4.toByte()
-        const val TFI_PN532_TO_HOST: Byte = 0xD5.toByte()
+        val TFI_HOST_TO_PN532: Byte = 0xD4.toByte()
+        val TFI_PN532_TO_HOST: Byte = 0xD5.toByte()
 
         // Comandi PN532
-        const val CMD_GET_FIRMWARE_VERSION:      Byte = 0x02
-        const val CMD_IN_LIST_PASSIVE_TARGET:    Byte = 0x4A
-        const val CMD_IN_COMMUNICATE_THRU:       Byte = 0x42
-        const val CMD_IN_DATA_EXCHANGE:          Byte = 0x40
+        val CMD_GET_FIRMWARE_VERSION:      Byte = 0x02
+        val CMD_IN_LIST_PASSIVE_TARGET:    Byte = 0x4A
+        val CMD_IN_COMMUNICATE_THRU:       Byte = 0x42
+        val CMD_IN_DATA_EXCHANGE:          Byte = 0x40
 
         // BrTy (tipo modulazione) per InListPassiveTarget
-        const val BRTY_ISO14443B:   Byte = 0x03  // ISO14443B
-        const val BRTY_ISO14443B2SR: Byte = 0x06 // ISO14443B2SR (SRIX4K)
-        const val BRTY_ISO14443B2CT: Byte = 0x07 // ST SR/CT (alternativo)
+        val BRTY_ISO14443B:   Byte = 0x03  // ISO14443B
+        val BRTY_ISO14443B2SR: Byte = 0x06 // ISO14443B2SR (SRIX4K)
+        val BRTY_ISO14443B2CT: Byte = 0x07 // ST SR/CT (alternativo)
 
         val ACK_FRAME = byteArrayOf(0x00, 0x00, 0xFF.toByte(), 0x00, 0xFF.toByte(), 0x00)
     }

@@ -116,27 +116,21 @@ class Srix4kReader(private val pn532: Pn532) {
      * @param blockNum numero del blocco (0-127)
      * @return 4 byte del blocco o null in caso di errore
      */
-    fun readBlock(blockNum: Int): ByteArray? {
-        require(blockNum in 0 until BLOCK_COUNT) { "blockNum fuori range: $blockNum" }
-
-        var attempts = 0
-        while (attempts < 3) {
-            val cmd = byteArrayOf(CMD_READ_BLOCK, blockNum.toByte())
-            val response = pn532.inCommunicateThru(cmd)
-
-            if (response != null && response.size == BLOCK_SIZE) {
-                return response
-            }
-
-            // Tag temporaneamente non presente, ri-seleziona
-            Log.d(TAG, "Retry lettura blocco $blockNum (tentativo ${++attempts})")
-            pn532.initISO14443B()
-            pn532.listPassiveTargetSrix4k()
+fun readBlock(blockNum: Int): ByteArray? {
+    require(blockNum in 0 until BLOCK_COUNT)
+    var attempts = 0
+    while (attempts < 3) {
+        val cmd = byteArrayOf(0x08, blockNum.toByte())
+        val response = pn532.inCommunicateThru(cmd)
+        if (response != null && response.size >= BLOCK_SIZE) {
+            return response.copyOfRange(0, BLOCK_SIZE) // forza esattamente 4 byte
         }
-
-        Log.e(TAG, "Impossibile leggere blocco $blockNum dopo 3 tentativi")
-        return null
+        pn532.initISO14443B()
+        pn532.listPassiveTargetSrix4k()
+        attempts++
     }
+    return null
+}
 
     /**
      * Legge tutti i 128 blocchi della EEPROM SRIX4K.

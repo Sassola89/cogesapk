@@ -1,0 +1,99 @@
+package com.mikai.android.nfc
+
+import android.util.Log
+import com.mikai.android.usb.Acr122uDevice
+
+class Pn532(private val device: Acr122uDevice) {
+
+    companion object {
+        private const val TAG = "Pn532"
+        val TFI_HOST_TO_PN532: Byte = 0xD4.toByte()
+        val TFI_PN532_TO_HOST: Byte = 0xD5.toByte()
+        val CMD_GET_FIRMWARE_VERSION: Byte = 0x02
+        val CMD_IN_LIST_PASSIVE_TARGET: Byte = 0x4A
+        val CMD_IN_COMMUNICATE_THRU: Byte = 0x42
+        val CMD_IN_DATA_EXCHANGE: Byte = 0x40
+        val BRTY_ISO14443B: Byte = 0x03
+        val BRTY_ISO14443B2SR: Byte = 0x06
+        val ACK_FRAME = byteArrayOf(0x00, 0x00, 0xFF.toByte(), 0x00, 0xFF.toByte(), 0x00)
+    }
+
+    fun getFirmwareVersion(): String? {
+        val response = sendCommand(CMD_GET_FIRMWARE_VERSION) ?: return null
+        if (response.size < 4) return null
+        return "IC=${response[0].toInt() and 0xFF} Ver=${response[1].toInt() and 0xFF}.${response[2].toInt() and 0xFF}"
+    }
+
+    fun initISO14443B(): Boolean {
+        val data = byteArrayOf(0x01, BRTY_ISO14443B)
+        val response = sendCommand(CMD_IN_LIST_PASSIVE_TARGET, data) ?: return false
+        Log.d(TAG, "InitISO14443B ok")
+        return true
+    }
+
+    fun listPassiveTargetSrix4k(): Boolean {
+        val data = byteArrayOf(0x01, BRTY_ISO14443B2SR)
+        val response = sendCommand(CMD_IN_LIST_PASSIVE_TARGET, data) ?: return false
+        return response.isNotEmpty() && response[0].toInt() > 0
+    }
+
+    fun inCommunicateThru(rawData: ByteArray): ByteArray? {
+        val response = sendCommand(CMD_IN_COMMUNICATE_THRU, rawData) ?: return null
+        if (response.isEmpty()) return null
+        val status = response[0].toInt() and 0xFF
+        if (status != 0x00) {
+            Log.e(TAG, "Errore status: 0x${status.toString(16)}")
+            return null
+        }
+        return if (response.size > 1) response.copyOfRange(1, response.size) else ByteArray(0)
+    }
+
+    private fun sendCommand(cmd: Byte, data: ByteArray = ByteArray(0)): ByteArray? {
+        val frame = buildFrame(TFI_HOST_TO_PN532, cmd, data)
+        val rawResponse = device.sendEscape(frame) ?: return null
+        return parseFrame(rawResponse, cmd)
+    }
+
+    fun buildFrame(tfi: Byte, cmd: Byte, data: ByteArray): ByteArray {
+        val payloadLen = 1 + 1 + data.size
+        val frame = ByteArray(6 + payloadLen + 2)
+        var idx = 0
+        frame[idx++] = 0x00
+        frame[idx++] = 0x00
+        frame[idx++] = 0xFF.toByte()
+        frame[idx++] = payloadLen.toByte()
+        frame[idx++] = ((payloadLen.inv() + 1) and 0xFF).toByte()
+        frame[idx++] = tfi
+        var dcs = tfi.toInt()
+        frame[idx++] = cmd
+        dcs += cmd.toInt()
+        for (b in data) { frame[idx++] = b; dcs += b.toInt() }
+        frame[idx++] = ((dcs.inv() + 1) and 0xFF).toByte()
+        frame[idx] = 0x00
+        return frame
+    }
+
+    private fun parseFrame(raw: ByteArray, sentCmd: Byte): ByteArray? {
+        var i = 0
+        while (i < raw.size - 1) {
+            if (raw[i] == 0x00.toByte() && raw[i + 1] == 0xFF.toByte()) break
+            i++
+        }
+        if (i >= raw.size - 1) return null
+        i += 2
+        if (i >= raw.size) return null
+        val len = raw[i++].toInt() and 0xFF
+        if (i >= raw.size) return null
+        val lcs = raw[i++].toInt() and 0xFF
+        if ((len + lcs) and 0xFF != 0) return null
+        if (i + len > raw.size) return null
+        val tfi = raw[i]
+        if (tfi != TFI_PN532_TO_HOST) return null
+        val dataStart = i + 2
+        val dataEnd = i + len
+        return if (dataEnd > dataStart) raw.copyOfRange(dataStart, dataEnd) else ByteArray(0)
+    }
+
+    private fun ByteArray.toHexString() =
+        joinToString(" ") { "%02X".format(it.toInt() and 0xFF) }
+}

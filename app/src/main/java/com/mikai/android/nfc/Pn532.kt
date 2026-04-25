@@ -22,16 +22,17 @@ class Pn532(private val device: Acr122uDevice) {
         return response.isNotEmpty() && response[0].toInt() > 0
     }
 
-    fun inCommunicateThru(rawData: ByteArray): ByteArray? {
-        val response = sendCommand(0x42, rawData) ?: return null
-        if (response.isEmpty()) return null
-        val status = response[0].toInt() and 0xFF
-        if (status != 0x00) {
-            Log.e("Pn532", "Status error: 0x${status.toString(16)}")
-            return null
-        }
-        return if (response.size > 1) response.copyOfRange(1, response.size) else ByteArray(0)
+fun inCommunicateThru(rawData: ByteArray): ByteArray? {
+    val response = sendCommand(0x42, rawData) ?: return null
+    if (response.isEmpty()) return null
+    val status = response[0].toInt() and 0xFF
+    if (status != 0x00) {
+        Log.e("Pn532", "Status error: 0x${status.toString(16)}")
+        return null
     }
+    if (response.size < 2) return ByteArray(0)
+    return response.copyOfRange(1, response.size)
+}
 
     private fun sendCommand(cmd: Int, data: ByteArray = ByteArray(0)): ByteArray? {
         val frame = buildFrame(0xD4, cmd, data)

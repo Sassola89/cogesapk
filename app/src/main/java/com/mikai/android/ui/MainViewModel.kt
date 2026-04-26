@@ -155,8 +155,9 @@ class MainViewModel : ViewModel() {
                         errorMessage = null
                     )
                 }
-            }.onFailure { e ->
-                log("❌ Errore: ${e.message}")
+}.onFailure { e ->
+    log("❌ Errore: ${e.message}")
+    log("❌ Stack: ${e.stackTraceToString().take(300)}")
                 updateState {
                     copy(
                         isLoading = false,

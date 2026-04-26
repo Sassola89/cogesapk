@@ -51,37 +51,43 @@ class Srix4kReader(private val pn532: Pn532) {
      *
      * @return true se l'inizializzazione è avvenuta correttamente
      */
-    fun initialize(): Boolean {
-        // Step 1: inizializza ISO14443B per configurare i registri PN532
-        // (necessario per SRIX4K, vedi commento nel reader.c della libmikai)
-        pn532.initISO14443B()
+fun initialize(): Boolean {
+    // Prova fino a 5 volte con delay crescente
+    for (attempt in 1..5) {
+        Log.d(TAG, "Tentativo $attempt/5...")
 
-        // Step 2: trova il tag SRIX4K
+        // Step 1: reset registri interni PN532 (obbligatorio per SRIX4K)
+        // Non importa se non trova tag ISO14443B, serve solo per configurare i registri
+        pn532.initISO14443B()
+        Thread.sleep(50)
+        pn532.initISO14443B()
+        Thread.sleep(100)
+
+        // Step 2: cerca tag SRIX4K
         if (!pn532.listPassiveTargetSrix4k()) {
-            Log.e(TAG, "Nessun tag SRIX4K trovato")
-            return false
+            Log.d(TAG, "Tag non trovato al tentativo $attempt")
+            Thread.sleep(200L * attempt)
+            continue
         }
 
         // Step 3: leggi UID
         if (!readUid()) {
-            Log.e(TAG, "Errore lettura UID")
-            return false
+            Log.d(TAG, "Errore UID al tentativo $attempt")
+            Thread.sleep(200)
+            continue
         }
 
-        // Step 4: leggi tutti i blocchi
+        // Step 4: leggi EEPROM
         if (!readAllBlocks()) {
-            Log.e(TAG, "Errore lettura blocchi EEPROM")
-            return false
+            Log.d(TAG, "Errore EEPROM al tentativo $attempt")
+            continue
         }
 
-        Log.d(TAG, "SRIX4K inizializzato. UID=${uid.toString(16).uppercase().padStart(16, '0')}")
+        Log.d(TAG, "SRIX4K inizializzato. UID=${uid.toString(16).uppercase()}")
         return true
     }
-
-    /**
-     * Legge l'UID del tag (8 byte).
-     * Verifica che sia un tag ST Microelectronics valido.
-     */
+    return false
+}
     private fun readUid(): Boolean {
         val response = pn532.inCommunicateThru(byteArrayOf(CMD_GET_UID)) ?: return false
 

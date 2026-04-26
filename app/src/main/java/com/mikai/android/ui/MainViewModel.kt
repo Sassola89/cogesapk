@@ -117,12 +117,16 @@ class MainViewModel : ViewModel() {
 
             val result = withContext(Dispatchers.IO) {
                 runCatching {
-                    val pn532  = Pn532(device)
-                    val reader = Srix4kReader(pn532)
+val pn532  = Pn532(device)
+val reader = Srix4kReader(pn532)
 
-                    // Verifica firmware PN532
-                    val fw = pn532.getFirmwareVersion()
-                    if (fw != null) Log.d(TAG, "PN532 firmware: $fw")
+// Verifica firmware PN532
+val fw = pn532.getFirmwareVersion()
+if (fw == null) throw Exception("PN532 non risponde — problema CCID/USB")
+Log.d(TAG, "PN532 firmware: $fw")
+withContext(Dispatchers.Main) { log("🔧 PN532 OK: $fw") }
+
+// Mostra firmware nel log UI
 
                     if (!reader.initialize()) {
                         throw Exception("Nessuna MyKey rilevata. Avvicina la carta al lettore.")

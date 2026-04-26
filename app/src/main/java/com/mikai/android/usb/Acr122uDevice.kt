@@ -49,47 +49,45 @@ class Acr122uDevice(private val usbDevice: UsbDevice, private val usbManager: Us
      * Apre la connessione USB al lettore.
      * @return true se la connessione è riuscita
      */
-    fun open(): Boolean {
-        // Cerca l'interfaccia CCID (class 0x0B)
-        val ccidInterface = findCcidInterface() ?: run {
-            Log.e(TAG, "Interfaccia CCID non trovata")
-            return false
-        }
-
-        val conn = usbManager.openDevice(usbDevice) ?: run {
-            Log.e(TAG, "Impossibile aprire il dispositivo USB (permesso mancante?)")
-            return false
-        }
-
-        if (!conn.claimInterface(ccidInterface, true)) {
-            Log.e(TAG, "Impossibile reclamare l'interfaccia CCID")
-            conn.close()
-            return false
-        }
-
-        // Trova gli endpoint Bulk IN e OUT
-        val (epIn, epOut) = findBulkEndpoints(ccidInterface) ?: run {
-            Log.e(TAG, "Endpoint Bulk non trovati")
-            conn.releaseInterface(ccidInterface)
-            conn.close()
-            return false
-        }
-
-        usbInterface = ccidInterface
-        endpointIn  = epIn
-        endpointOut = epOut
-        connection  = conn
-        seqNumber   = 0
-
-        Log.d(TAG, "ACR122U connesso: ${usbDevice.deviceName}")
-        Log.d(TAG, "  Endpoint OUT maxPacket=${epOut.maxPacketSize}")
-        Log.d(TAG, "  Endpoint IN  maxPacket=${epIn.maxPacketSize}")
-        return true
+fun open(): Boolean {
+    val ccidInterface = findCcidInterface() ?: run {
+        Log.e(TAG, "Interfaccia CCID non trovata")
+        return false
     }
 
-    /**
-     * Chiude la connessione USB.
-     */
+    val conn = usbManager.openDevice(usbDevice) ?: run {
+        Log.e(TAG, "Impossibile aprire il dispositivo USB")
+        return false
+    }
+
+    if (!conn.claimInterface(ccidInterface, true)) {
+        Log.e(TAG, "Impossibile reclamare l'interfaccia CCID")
+        conn.close()
+        return false
+    }
+
+    val (epIn, epOut) = findBulkEndpoints(ccidInterface) ?: run {
+        Log.e(TAG, "Endpoint Bulk non trovati")
+        conn.releaseInterface(ccidInterface)
+        conn.close()
+        return false
+    }
+
+    usbInterface = ccidInterface
+    endpointIn  = epIn
+    endpointOut = epOut
+    connection  = conn
+    seqNumber   = 0
+
+    Log.d(TAG, "ACR122U connesso: ${usbDevice.deviceName}")
+
+    // Inizializza il chip - FONDAMENTALE
+    Thread.sleep(100)
+    powerOn()
+    Thread.sleep(100)
+
+    return true
+}
     fun close() {
         usbInterface?.let { connection?.releaseInterface(it) }
         connection?.close()
@@ -184,15 +182,27 @@ class Acr122uDevice(private val usbDevice: UsbDevice, private val usbManager: Us
     // Metodi privati
     // ────────────────────────────────────────────────────────────────────
 
-    private fun findCcidInterface(): UsbInterface? {
-        for (i in 0 until usbDevice.interfaceCount) {
-            val iface = usbDevice.getInterface(i)
-            // CCID class = 0x0B
-            if (iface.interfaceClass == 0x0B) return iface
+private fun findCcidInterface(): UsbInterface? {
+    // Prima cerca l'interfaccia CCID (class 0x0B)
+    for (i in 0 until usbDevice.interfaceCount) {
+        val iface = usbDevice.getInterface(i)
+        if (iface.interfaceClass == 0x0B) {
+            Log.d(TAG, "Trovata interfaccia CCID all'indice $i")
+            return iface
         }
-        // Fallback: prima interfaccia
-        return if (usbDevice.interfaceCount > 0) usbDevice.getInterface(0) else null
     }
+    // Fallback: prova la prima interfaccia con endpoint Bulk
+    for (i in 0 until usbDevice.interfaceCount) {
+        val iface = usbDevice.getInterface(i)
+        for (j in 0 until iface.endpointCount) {
+            if (iface.getEndpoint(j).type == UsbConstants.USB_ENDPOINT_XFER_BULK) {
+                Log.d(TAG, "Fallback: uso interfaccia $i (class=${iface.interfaceClass})")
+                return iface
+            }
+        }
+    }
+    return null
+}
 
     private fun findBulkEndpoints(iface: UsbInterface): Pair<UsbEndpoint, UsbEndpoint>? {
         var epIn: UsbEndpoint?  = null

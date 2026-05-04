@@ -85,9 +85,8 @@ Log.d(TAG, "ACR122U connesso: ${usbDevice.deviceName}")
 Thread.sleep(300)
 
 // Svuota il buffer di ricezione prima di iniziare
-val epIn = endpointIn!!
 val flush = ByteArray(512)
-conn.bulkTransfer(epIn, flush, flush.size, 200) // timeout corto, non importa se fallisce
+conn.bulkTransfer(epIn, flush, flush.size, 200)
 
 Thread.sleep(100)
 

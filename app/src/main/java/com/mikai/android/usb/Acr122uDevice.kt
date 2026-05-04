@@ -80,8 +80,35 @@ fun open(): Boolean {
     seqNumber   = 0
 
 Log.d(TAG, "ACR122U connesso: ${usbDevice.deviceName}")
-Thread.sleep(200)
+
+Thread.sleep(100)
+powerOn()
+Thread.sleep(100)
+
+// SAMConfiguration - OBBLIGATORIO per il PN532
+// Senza questo il chip non risponde ai comandi
+samConfiguration()
+Thread.sleep(100)
+
 return true
+}
+private fun samConfiguration(): Boolean {
+    // Comando PN532: SAMConfiguration - modalità normale, no timeout, no IRQ
+    val samCmd = byteArrayOf(
+        0x00, 0x00, 0xFF.toByte(), // preamble + start
+        0x05,                       // LEN = 5
+        0xFB.toByte(),              // LCS
+        0xD4.toByte(),              // TFI host->PN532
+        0x14,                       // CMD: SAMConfiguration
+        0x01,                       // Mode: Normal
+        0x14,                       // Timeout: 20 * 50ms = 1s
+        0x01,                       // IRQ: yes
+        0x02.toByte(),              // DCS
+        0x00                        // postamble
+    )
+    val result = sendEscape(samCmd)
+    Log.d(TAG, "SAMConfiguration: ${result?.toHexString() ?: "null"}")
+    return result != null
 }
     fun close() {
         usbInterface?.let { connection?.releaseInterface(it) }

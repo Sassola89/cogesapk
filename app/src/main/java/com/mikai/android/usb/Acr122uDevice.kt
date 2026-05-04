@@ -163,19 +163,33 @@ val responseBuffer = ByteArray(512)
     return null  // ora rigetta invece di andare avanti con dati corrotti
 }
 
-    val payloadLen = (responseBuffer[1].toInt() and 0xFF) or
-            ((responseBuffer[2].toInt() and 0xFF) shl 8) or
-            ((responseBuffer[3].toInt() and 0xFF) shl 16) or
-            ((responseBuffer[4].toInt() and 0xFF) shl 24)
+val payloadLen = (responseBuffer[1].toInt() and 0xFF) or
+        ((responseBuffer[2].toInt() and 0xFF) shl 8) or
+        ((responseBuffer[3].toInt() and 0xFF) shl 16) or
+        ((responseBuffer[4].toInt() and 0xFF) shl 24)
 
-    Log.d(TAG, "Payload len: $payloadLen")
+Log.d(TAG, "Payload len: $payloadLen")
 
-    if (payloadLen <= 0 || CCID_HEADER_LEN + payloadLen > bytesReceived) {
-        return responseBuffer.copyOfRange(CCID_HEADER_LEN, bytesReceived)
+// Se il primo pacchetto è vuoto, l'ACR122U manda il payload PN532 in un secondo pacchetto
+if (payloadLen == 0) {
+    Log.d(TAG, "Payload vuoto, attendo secondo pacchetto...")
+    Thread.sleep(50)
+    val responseBuffer2 = ByteArray(512)
+    val bytesReceived2 = conn.bulkTransfer(epIn, responseBuffer2, responseBuffer2.size, USB_TIMEOUT_MS)
+    Log.d(TAG, "CCID RX2 ($bytesReceived2 bytes): ${responseBuffer2.take(bytesReceived2.coerceAtLeast(0)).toByteArray().toHexString()}")
+    if (bytesReceived2 > CCID_HEADER_LEN) {
+        val payloadLen2 = (responseBuffer2[1].toInt() and 0xFF) or
+                ((responseBuffer2[2].toInt() and 0xFF) shl 8)
+        return if (payloadLen2 > 0) responseBuffer2.copyOfRange(CCID_HEADER_LEN, CCID_HEADER_LEN + payloadLen2)
+               else responseBuffer2.copyOfRange(CCID_HEADER_LEN, bytesReceived2)
     }
-
-    return responseBuffer.copyOfRange(CCID_HEADER_LEN, CCID_HEADER_LEN + payloadLen)
+    return ByteArray(0)
 }
+
+if (CCID_HEADER_LEN + payloadLen > bytesReceived) {
+    return responseBuffer.copyOfRange(CCID_HEADER_LEN, bytesReceived)
+}
+return responseBuffer.copyOfRange(CCID_HEADER_LEN, CCID_HEADER_LEN + payloadLen)
 
     /**
      * Alimenta il chip card slot (ICC Power On).

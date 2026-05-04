@@ -79,14 +79,9 @@ fun open(): Boolean {
     connection  = conn
     seqNumber   = 0
 
-    Log.d(TAG, "ACR122U connesso: ${usbDevice.deviceName}")
-
-    // Inizializza il chip - FONDAMENTALE
-    Thread.sleep(100)
-    powerOn()
-    Thread.sleep(100)
-
-    return true
+Log.d(TAG, "ACR122U connesso: ${usbDevice.deviceName}")
+Thread.sleep(200)
+return true
 }
     fun close() {
         usbInterface?.let { connection?.releaseInterface(it) }
@@ -103,56 +98,54 @@ fun open(): Boolean {
      * @param pn532Frame frame PN532 completo (preamble + start codes + LEN + TFI + CMD + DATA + DCS + postamble)
      * @return array di byte della risposta PN532, o null in caso di errore
      */
-    fun sendEscape(pn532Frame: ByteArray): ByteArray? {
-        val conn = connection ?: return null
-        val epOut = endpointOut ?: return null
-        val epIn  = endpointIn  ?: return null
+fun sendEscape(pn532Frame: ByteArray): ByteArray? {
+    val conn = connection ?: return null
+    val epOut = endpointOut ?: return null
+    val epIn  = endpointIn  ?: return null
 
-        val seq = seqNumber++
+    val seq = seqNumber++
+    val ccidMsg = buildCcidEscape(pn532Frame, seq)
 
-        // Costruisce il messaggio CCID PC_to_RDR_Escape
-        val ccidMsg = buildCcidEscape(pn532Frame, seq)
+    Log.d(TAG, "CCID TX: ${ccidMsg.toHexString()}")
 
-        // Invia via Bulk OUT
-        val bytesSent = conn.bulkTransfer(epOut, ccidMsg, ccidMsg.size, USB_TIMEOUT_MS)
-        if (bytesSent != ccidMsg.size) {
-            Log.e(TAG, "Errore invio CCID: inviati $bytesSent/${ccidMsg.size}")
-            return null
-        }
+val bytesSent = conn.bulkTransfer(epOut, ccidMsg, ccidMsg.size, USB_TIMEOUT_MS)
+if (bytesSent < 0) {
+    Log.e(TAG, "Errore bulkTransfer OUT: $bytesSent")
+    return null
+}
 
-        // Riceve la risposta via Bulk IN
-        val responseBuffer = ByteArray(epIn.maxPacketSize.coerceAtLeast(64))
-        val bytesReceived = conn.bulkTransfer(epIn, responseBuffer, responseBuffer.size, USB_TIMEOUT_MS)
-        if (bytesReceived < CCID_HEADER_LEN) {
-            Log.e(TAG, "Risposta CCID troppo corta: $bytesReceived byte")
-            return null
-        }
+Thread.sleep(20) // piccolo delay per dare tempo al chip di rispondere
 
-        // Verifica tipo messaggio e stato
-        if (responseBuffer[0] != RDR_TO_PC_ESCAPE) {
-            Log.e(TAG, "Tipo risposta CCID inatteso: 0x${responseBuffer[0].toInt().and(0xFF).toString(16)}")
-            return null
-        }
+val responseBuffer = ByteArray(512)
+    val bytesReceived = conn.bulkTransfer(epIn, responseBuffer, responseBuffer.size, USB_TIMEOUT_MS)
+    Log.d(TAG, "CCID RX ($bytesReceived bytes): ${responseBuffer.take(bytesReceived.coerceAtLeast(0)).toByteArray().toHexString()}")
 
-        val bStatus = responseBuffer[7].toInt() and 0xFF
-        if ((bStatus and 0xC0) != 0) {
-            Log.e(TAG, "CCID bStatus errore: 0x${bStatus.toString(16)}")
-            return null
-        }
-
-        // Estrae il payload PN532 dall'header CCID
-        val payloadLen = (responseBuffer[1].toInt() and 0xFF) or
-                ((responseBuffer[2].toInt() and 0xFF) shl 8) or
-                ((responseBuffer[3].toInt() and 0xFF) shl 16) or
-                ((responseBuffer[4].toInt() and 0xFF) shl 24)
-
-        if (payloadLen <= 0 || CCID_HEADER_LEN + payloadLen > bytesReceived) {
-            Log.e(TAG, "Lunghezza payload CCID non valida: $payloadLen")
-            return null
-        }
-
-        return responseBuffer.copyOfRange(CCID_HEADER_LEN, CCID_HEADER_LEN + payloadLen)
+    if (bytesReceived < CCID_HEADER_LEN) {
+        Log.e(TAG, "Risposta troppo corta: $bytesReceived")
+        return null
     }
+
+    Log.d(TAG, "CCID header[0]=${responseBuffer[0].toInt().and(0xFF).toString(16)} status=${responseBuffer[7].toInt().and(0xFF).toString(16)}")
+
+    if (responseBuffer[0] != RDR_TO_PC_ESCAPE) {
+        Log.e(TAG, "Tipo risposta inatteso: 0x${responseBuffer[0].toInt().and(0xFF).toString(16)}")
+        // Prova comunque a restituire il payload
+        return responseBuffer.copyOfRange(CCID_HEADER_LEN, bytesReceived)
+    }
+
+    val payloadLen = (responseBuffer[1].toInt() and 0xFF) or
+            ((responseBuffer[2].toInt() and 0xFF) shl 8) or
+            ((responseBuffer[3].toInt() and 0xFF) shl 16) or
+            ((responseBuffer[4].toInt() and 0xFF) shl 24)
+
+    Log.d(TAG, "Payload len: $payloadLen")
+
+    if (payloadLen <= 0 || CCID_HEADER_LEN + payloadLen > bytesReceived) {
+        return responseBuffer.copyOfRange(CCID_HEADER_LEN, bytesReceived)
+    }
+
+    return responseBuffer.copyOfRange(CCID_HEADER_LEN, CCID_HEADER_LEN + payloadLen)
+}
 
     /**
      * Alimenta il chip card slot (ICC Power On).
@@ -247,4 +240,8 @@ private fun findCcidInterface(): UsbInterface? {
         data.copyInto(msg, CCID_HEADER_LEN)
         return msg
     }
+    private fun ByteArray.toHexString() = joinToString(" ") { 
+        "%02X".format(it.toInt() and 0xFF) 
+    }
+
 }

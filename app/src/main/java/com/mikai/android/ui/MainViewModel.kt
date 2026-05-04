@@ -116,8 +116,15 @@ class MainViewModel : ViewModel() {
             log("📖 Avvio lettura MyKey…")
 
             val result = withContext(Dispatchers.IO) {
-                runCatching {
-val pn532  = Pn532(device)
+    runCatching {
+        // Cattura log precedenti
+        try {
+            val process = Runtime.getRuntime().exec("logcat -d -t 200 Acr122uDevice:D *:S")
+            val output = process.inputStream.bufferedReader().readText()
+            withContext(Dispatchers.Main) { log("LOG: ${output.takeLast(300)}") }
+        } catch (e: Exception) { }
+
+        val pn532  = Pn532(device)
 val reader = Srix4kReader(pn532)
 
 // Verifica firmware PN532

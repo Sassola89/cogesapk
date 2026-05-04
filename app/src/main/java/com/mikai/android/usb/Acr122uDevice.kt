@@ -15,6 +15,7 @@ import android.util.Log
  */
 class Acr122uDevice(private val usbDevice: UsbDevice, private val usbManager: UsbManager) {
 
+
     companion object {
         private const val TAG = "Acr122uDevice"
 
@@ -81,12 +82,16 @@ fun open(): Boolean {
 
 Log.d(TAG, "ACR122U connesso: ${usbDevice.deviceName}")
 
-Thread.sleep(100)
-powerOn()
+Thread.sleep(300)
+
+// Svuota il buffer di ricezione prima di iniziare
+val epIn = endpointIn!!
+val flush = ByteArray(512)
+conn.bulkTransfer(epIn, flush, flush.size, 200) // timeout corto, non importa se fallisce
+
 Thread.sleep(100)
 
-// SAMConfiguration - OBBLIGATORIO per il PN532
-// Senza questo il chip non risponde ai comandi
+// SAMConfiguration - inizializza il PN532
 samConfiguration()
 Thread.sleep(100)
 
@@ -154,11 +159,10 @@ val responseBuffer = ByteArray(512)
 
     Log.d(TAG, "CCID header[0]=${responseBuffer[0].toInt().and(0xFF).toString(16)} status=${responseBuffer[7].toInt().and(0xFF).toString(16)}")
 
-    if (responseBuffer[0] != RDR_TO_PC_ESCAPE) {
-        Log.e(TAG, "Tipo risposta inatteso: 0x${responseBuffer[0].toInt().and(0xFF).toString(16)}")
-        // Prova comunque a restituire il payload
-        return responseBuffer.copyOfRange(CCID_HEADER_LEN, bytesReceived)
-    }
+    if (responseBuffer[0] != RDR_TO_PC_ESCAPE && responseBuffer[0] != RDR_TO_PC_DATA_BLOCK) {
+    Log.e(TAG, "Tipo risposta inatteso: 0x${responseBuffer[0].toInt().and(0xFF).toString(16)}")
+    return null  // ora rigetta invece di andare avanti con dati corrotti
+}
 
     val payloadLen = (responseBuffer[1].toInt() and 0xFF) or
             ((responseBuffer[2].toInt() and 0xFF) shl 8) or

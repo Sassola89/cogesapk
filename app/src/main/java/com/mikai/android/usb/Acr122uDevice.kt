@@ -190,7 +190,7 @@ if (CCID_HEADER_LEN + payloadLen > bytesReceived) {
     return responseBuffer.copyOfRange(CCID_HEADER_LEN, bytesReceived)
 }
 return responseBuffer.copyOfRange(CCID_HEADER_LEN, CCID_HEADER_LEN + payloadLen)
-
+}
     /**
      * Alimenta il chip card slot (ICC Power On).
      */

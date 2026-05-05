@@ -90,9 +90,9 @@ conn.bulkTransfer(epIn, flush, flush.size, 200)
 
 Thread.sleep(100)
 
-// Reset degli endpoint (risolve bulkTransfer -1)
-conn.clearHalt(epOut)
-conn.clearHalt(epIn)
+// Reset endpoint via USB control transfer (compatibile API 24+)
+conn.controlTransfer(0x02, 0x01, 0, epOut.endpointNumber, null, 0, 1000)
+conn.controlTransfer(0x02, 0x01, 0, epIn.endpointNumber or 0x80, null, 0, 1000)
 
 Thread.sleep(100)
 

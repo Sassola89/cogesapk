@@ -90,6 +90,12 @@ conn.bulkTransfer(epIn, flush, flush.size, 200)
 
 Thread.sleep(100)
 
+// Reset degli endpoint (risolve bulkTransfer -1)
+conn.clearHalt(epOut)
+conn.clearHalt(epIn)
+
+Thread.sleep(100)
+
 // SAMConfiguration - inizializza il PN532
 samConfiguration()
 Thread.sleep(100)
